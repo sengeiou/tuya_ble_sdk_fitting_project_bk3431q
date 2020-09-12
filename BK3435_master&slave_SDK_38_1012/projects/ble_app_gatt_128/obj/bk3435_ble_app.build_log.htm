@@ -1,0 +1,53 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: ¦ÌVision V5.28.0.0
+Copyright (C) 2019 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: ding su, tuya, LIC=7YKWF-62U5T-IM69B-22WLA-5GI9C-PH7JM
+ 
+Tool Versions:
+Toolchain:       MDK-ARM Professional  Version: 5.28.0.0
+Toolchain Path:  C:\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 6 (build 750)
+Assembler:       Armasm.exe V5.06 update 6 (build 750)
+Linker/Locator:  ArmLink.exe V5.06 update 6 (build 750)
+Library Manager: ArmAr.exe V5.06 update 6 (build 750)
+Hex Converter:   FromElf.exe V5.06 update 6 (build 750)
+CPU DLL:         SARM.DLL V5.28.0.0
+Dialog DLL:      DARMP3.DLL
+Target DLL:      Segger\JLTAgdi.dll V1.61.0.0
+Dialog DLL:      TARMP3.DLL V1.4.0.0
+ 
+<h2>Project:</h2>
+D:\office\workspace\Bk\Tuya_ble_sdk_fitting_project_bk3431q\BK3435_master&slave_SDK_38_1012\projects\ble_app_gatt_128\bk3435.uvproj
+Project File Date:  07/14/2020
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 6 (build 750)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
+Build target 'BK3435_app'
+After Build - User command #1: fromelf --bin --output .\output\app\bk3435_ble_app.bin .\obj\bk3435_ble_app.axf
+After Build - User command #2: .\output\encrypt_app.bat
+D:\office\workspace\Bk\Tuya_ble_sdk_fitting_project_bk3431q\BK3435_master&slave_SDK_38_1012\projects\ble_app_gatt_128>.\output\BinConvert_3435_OAD  -oad .\output\bim\bk3435_ble_bim.bin  .\output\stack\bk3435_ble_stack.bin  .\output\app\bk3435_ble_app.bin -m 0x1F00 -l 0x1E200 -v 0x1111 -rom_v 0x000C -e 00000000 00000000 00000000 00000000 
+cmd_bin_oad.stack_file_addr :0x1f00
+binary version hex:0x1111; dec:4369
+Arm Image Binary will be converted to OAD format binary file.....
+cmd_bin_oad.stack_file_addr=1f00
+boot_bin_len=1cc4
+add stack bin start
+        Encrypt Seccessfully!
+        File Size: 0x3da44
+oad_stack_app_bin_len=3ba00
+oad_app_bin_len=1dad0
+75 3a 76 53 11 11 b4 76 42 42 42 42 ff ff 0c 00 /**< @CREATE_FILE_SUCCESS */
+/**< @Download flash file:.\output\app\bk3435_ble_app_merge_crc.bin
+/**< @OAD file :.\output\app\bk3435_ble_app_stack_oad.bin,CRC = 0x4943fe32
+/**< @OAD file :.\output\app\bk3435_ble_app_oad.bin,CRC = 0x53763a75
+/**< @author <gang.cheng@bekencorp.com> */
+/**< @version v0.3 */
+".\obj\bk3435_ble_app.axf" - 0 Error(s), 0 Warning(s).
+Build Time Elapsed:  00:00:01
+</pre>
+</body>
+</html>

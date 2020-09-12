@@ -1,0 +1,1284 @@
+/**
+ ****************************************************************************************
+ *
+ * @file appm_task.c
+ *
+ * @brief RW APP Task implementation
+ *
+ * Copyright (C) RivieraWaves 2009-2015
+ *
+ *
+ ****************************************************************************************
+ */
+
+/*
+ * INCLUDE FILES
+ ****************************************************************************************
+ */
+
+#include "rwip_config.h"          // SW configuration
+#include "rwapp_config.h"
+#if (BLE_APP_PRESENT)
+
+#include <string.h>
+#include "master_app.h"
+#include "appm.h"                      // Application Manager Definition
+#include "appm_task.h"              // Application Manager Task API
+#include "appc.h"   
+#include "appc_task.h"
+#include "gapc_task.h"            // GAP Controller Task API
+#include "gapm_task.h"          // GAP Manager Task API
+#include "gattc_task.h"
+#include "arch.h"                    // Platform Definitions
+
+#include "ke_timer.h"             // Kernel timer
+#include "app_fff0.h"              // fff0 Module Definition
+#include "fff0s_task.h"
+#include "app_sec.h"
+#include "app_electric.h"             
+#include "electric_task.h" 
+#include "gpio.h"
+#include "audio.h"
+#include "uart.h"
+#include "BK3435_reg.h"
+#include "icu.h"
+#include "reg_ble_em_cs.h"
+#include "lld.h"
+#include "wdt.h"
+#include "user_config.h"
+#include "cli.h"
+#include "sdp_service.h"
+#include "electric_task.h"
+
+/*
+ * LOCAL FUNCTION DEFINITIONS
+ ****************************************************************************************
+ */
+uint8_t con_dev_addr_flag_set(bd_addr_t bd_addr1,uint8_t flag);
+uint8_t discover_flag=0;
+extern struct gap_bdaddr  con_bdaddr;
+static uint8_t appm_get_handler(const struct ke_state_handler *handler_list,
+                                ke_msg_id_t msgid,
+                                void *param,
+                                ke_task_id_t src_id)
+{
+    // Counter
+    uint8_t counter;
+
+    // Get the message handler function by parsing the message table
+    for (counter = handler_list->msg_cnt; 0 < counter; counter--)
+    {
+        struct ke_msg_handler handler = /*( struct ke_msg_handler)*/(*(handler_list->msg_table + counter - 1));
+            
+  
+        if ((handler.id == msgid) ||(handler.id == KE_MSG_DEFAULT_HANDLER))
+        {
+            // If handler is NULL, message should not have been received in this state
+            ASSERT_ERR(handler.func);
+
+            return (uint8_t)(handler.func(msgid, param, TASK_APPM, src_id));
+        }
+    }
+
+    // If we are here no handler has been found, drop the message
+    return (KE_MSG_CONSUMED);
+}
+
+/*********************************************************
+FN: 
+*/
+// Timer 0
+//static int suble_timer0_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER0);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 1
+//static int suble_timer1_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER1);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 2
+//static int suble_timer2_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER2);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 3
+//static int suble_timer3_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER3);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 4
+//static int suble_timer4_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER4);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 5
+//static int suble_timer5_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER5);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 6
+//static int suble_timer6_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER6);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 7
+//static int suble_timer7_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER7);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 8
+//static int suble_timer8_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER8);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 9
+//static int suble_timer9_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER9);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 10
+//static int suble_timer10_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER10);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 11
+//static int suble_timer11_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER11);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 12
+//static int suble_timer12_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER12);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 13
+//static int suble_timer13_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER13);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 14
+//static int suble_timer14_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER14);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 15
+//static int suble_timer15_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER15);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 16
+//static int suble_timer16_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER16);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 17
+//static int suble_timer17_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER17);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 18
+//static int suble_timer18_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER18);
+//    return KE_MSG_CONSUMED;
+//}
+//// Timer 19
+//static int suble_timer19_handler(ke_msg_id_t const msgid, void *param, ke_task_id_t const dest_id, ke_task_id_t const src_id) {
+//    suble_timer_handler(SUBLE_TIMER19);
+//    return KE_MSG_CONSUMED;
+//}
+
+
+/*
+ * MESSAGE HANDLERS
+ ****************************************************************************************
+ */
+/**
+ ****************************************************************************************
+ * @brief
+ *
+ * @param[in] msgid     Id of the message received.
+ * @param[in] param     Pointer to the parameters of the message.
+ * @param[in] dest_id   ID of the receiving task instance (TASK_GAP).
+ * @param[in] src_id    ID of the sending task instance.
+ *
+ * @return If the message was consumed or not.
+ ****************************************************************************************
+ */
+static int app_adv_timeout_handler(ke_msg_id_t const msgid,
+                                   void const *param,
+                                   ke_task_id_t const dest_id,
+                                   ke_task_id_t const src_id)
+{
+#if (BLE_APP_HID)
+#else
+    // Stop advertising
+#if (BLE_PERIPHERAL)
+    appm_stop_advertising();
+#endif
+#endif
+    return (KE_MSG_CONSUMED);
+}
+
+/**
+ ****************************************************************************************
+ * @brief Handles ready indication from the GAP. - Reset the stack
+ *
+ * @param[in] msgid     Id of the message received.
+ * @param[in] param     Pointer to the parameters of the message.
+ * @param[in] dest_id   ID of the receiving task instance (TASK_GAP).
+ * @param[in] src_id    ID of the sending task instance.
+ *
+ * @return If the message was consumed or not.
+ ****************************************************************************************
+ */
+static int gapm_device_ready_ind_handler(ke_msg_id_t const msgid,
+                                         void const *param,
+                                         ke_task_id_t const dest_id,
+                                         ke_task_id_t const src_id)
+{
+    // Application has not been initialized
+    ASSERT_ERR(ke_state_get(dest_id) == APPM_INIT);
+
+    // Reset the stack
+    struct gapm_reset_cmd* cmd = KE_MSG_ALLOC(GAPM_RESET_CMD,
+                                              TASK_GAPM, TASK_APPM,
+                                              gapm_reset_cmd);
+
+	
+    cmd->operation = GAPM_RESET;
+
+    ke_msg_send(cmd);
+
+    return (KE_MSG_CONSUMED);
+}
+
+
+/**
+ ****************************************************************************************
+ * @brief Handles GAP manager command complete events.
+ *
+ * @param[in] msgid     Id of the message received.
+ * @param[in] param     Pointer to the parameters of the message.
+ * @param[in] dest_id   ID of the receiving task instance (TASK_GAP).
+ * @param[in] src_id    ID of the sending task instance.
+ *
+ * @return If the message was consumed or not.
+ ****************************************************************************************
+ */
+//extern uint8_t send_data_enable_flag[BLE_CONNECTION_MAX];
+uint8_t co_default_bdaddr_type = GAPM_CFG_ADDR_PRIVATE;
+static int gapm_cmp_evt_handler(ke_msg_id_t const msgid,
+                                struct gapm_cmp_evt const *param,
+                                ke_task_id_t const dest_id,
+                                ke_task_id_t const src_id)
+{
+//	UART_PRINTF("appm gapm_cmp_evt operation = 0x%x,status = 0x%x \r\n", param->operation, param->status);
+    switch(param->operation)
+    {
+        // Reset completed
+        case (GAPM_RESET):
+        {
+            if(param->status == GAP_ERR_NO_ERROR)
+            {
+                // Set Device configuration
+                struct gapm_set_dev_config_cmd* cmd = KE_MSG_ALLOC(GAPM_SET_DEV_CONFIG_CMD,
+	                                                                   TASK_GAPM, TASK_APPM,
+                                                                   gapm_set_dev_config_cmd);
+                // Set the operation
+                cmd->operation = GAPM_SET_DEV_CONFIG;
+                // Set the device role - Peripheral
+                cmd->role      = GAP_ROLE_ALL;//GAP_ROLE_ALL;//GAP_ROLE_PERIPHERAL;//GAP_ROLE_ALL;
+                
+                if(co_default_bdaddr_type == GAPM_CFG_ADDR_PUBLIC)
+                {
+                    cmd->addr_type = GAPM_CFG_ADDR_PUBLIC;
+                }
+                else
+                {                
+                    cmd->addr_type = GAPM_CFG_ADDR_PRIVATE;///GAPM_CFG_ADDR_PUBLIC;
+                    memcpy(cmd->addr.addr, &co_default_bdaddr, 6);
+                }
+                // Set Data length parameters
+             //  cmd->sugg_max_tx_octets = BLE_MIN_OCTETS;
+              // cmd->sugg_max_tx_time   = BLE_MIN_TIME;
+                
+                cmd->sugg_max_tx_octets = BLE_MAX_OCTETS;
+                cmd->sugg_max_tx_time   = BLE_MAX_TIME;
+								
+		 		cmd->max_mtu = BLE_MAX_OCTETS;
+                //Do not support secure connections
+                cmd->pairing_mode = GAPM_PAIRING_LEGACY;
+                
+                // load IRK
+                memcpy(cmd->irk.key, appm_env.loc_irk, KEY_LEN);
+
+                appm_env.next_svc = 0;
+
+                // Send message
+                ke_msg_send(cmd);
+            }
+            else
+            {
+                ASSERT_ERR(0);
+            }
+        }
+        break;
+        
+        case (GAPM_CANCEL):
+        {
+             if( param->status == GAP_ERR_COMMAND_DISALLOWED)
+             {
+               // appm_scan_adv_con_schedule();
+             }
+        }break;
+        case (GAPM_PROFILE_TASK_ADD):
+        {
+            // Add the next requested service
+            UART_PRINTF("GAPM_PROFILE_TASK_ADD app_state = 0x%x\r\n",ke_state_get(dest_id));
+            if (ke_state_get(dest_id) == APPM_CREATE_DB)
+            {
+                if (!appm_add_svc())
+                {                    
+                    ke_state_set(dest_id,APPM_IDLE);    
+#if CLI_CONSOLE                    
+                    aos_cli_init();
+#endif									  
+                    appm_scan_adv_con_schedule();
+
+                }
+            }
+        else if(ke_state_get(dest_id) == APPM_CONNECTED)
+        {
+            uint8_t find;
+          //  find = sdp_enable_all_server_ntf_ind(1);
+            UART_PRINTF("------------------find--- = %d\r\n",find);
+        }
+    } 
+    break;
+    // Device Configuration updated
+    case (GAPM_SET_DEV_CONFIG):
+    {
+        ASSERT_INFO(param->status == GAP_ERR_NO_ERROR, param->operation, param->status);
+        // Go to the create db state
+        ke_state_set(TASK_APPM, APPM_CREATE_DB);
+        uart2_printf("GAPM_SET_DEV_CONFIG appm_add_svc \r\n");
+        // Add the first required service in the database
+        // and wait for the PROFILE_ADDED_IND
+        appm_add_svc();
+    }
+    break;
+ 
+        case (GAPM_ADV_NON_CONN):
+        case (GAPM_ADV_UNDIRECT):
+        case (GAPM_ADV_DIRECT):
+		case (GAPM_UPDATE_ADVERTISE_DATA):
+        case (GAPM_ADV_DIRECT_LDC):
+		{
+            
+            UART_PRINTF("adv stoped\r\n");
+            if (param->status == GAP_ERR_CANCELED)
+            {
+                if(ke_state_get(TASK_APPM) == APPM_WAIT_ADVERTISTING_END)
+                {
+                    ke_state_set(TASK_APPM,APPM_ADVERTISTING_END);
+                    appm_scan_adv_con_schedule();
+                }else
+                {
+                    UART_PRINTF("state error state:0x%x!!! \r\n",ke_state_get(TASK_APPM));
+                }
+               
+            }
+            if (param->status == GAP_ERR_NO_ERROR)
+            {
+                 ke_state_set(TASK_APPM,APPM_ADVERTISTING_END);
+                 appm_scan_adv_con_schedule();
+            }
+            
+			if (param->status == GAP_ERR_TIMEOUT)
+			{
+                ke_state_set(TASK_APPM, APPM_IDLE);
+				
+            }
+            
+		}
+        break;
+#if (BLE_CENTRAL || BLE_OBSERVER )
+    case (GAPM_SCAN_ACTIVE):
+    case(GAPM_SCAN_PASSIVE):
+    {
+        
+        if (param->status == GAP_ERR_CANCELED)
+        {
+            DEBUG_MSG(0X14);
+            UART_PRINTF("scan stoped\r\n");
+            if (ke_state_get(TASK_APPM) == APPM_WAIT_SCAN_END)
+            {
+  
+                ke_state_set(TASK_APPM,APPM_SCAN_END);
+                appm_scan_adv_con_schedule();
+            }
+        }
+    }
+    break;
+#endif
+#if (BLE_CENTRAL)
+    case (GAPM_CONNECTION_DIRECT):
+    {	
+         DEBUG_MSG(0X12);
+         UART_PRINTF("=====================CONNECTION_DIRECT = %x\r\n",param->status);
+         if (param->status == GAP_ERR_NO_ERROR)
+         {
+              ke_state_set(TASK_APPM, APPM_IDLE);
+             // appm_scan_adv_con_schedule();  
+
+         }
+         else if (param->status == GAP_ERR_CANCELED)
+         {
+            appm_env.con_dev_flag = 0;
+          //  APPM_SET_FIELD(ADV_EN,1);
+          //  APPM_SET_FIELD(SCAN_EN,1);
+            ke_state_set(TASK_APPM, APPM_IDLE);
+          //  appm_scan_adv_con_schedule();               
+         }
+         else if(param->status == LL_ERR_ACL_CON_EXISTS)
+         {
+             ke_state_set(TASK_APPM, APPM_IDLE);
+         }
+    }
+    break;
+#endif
+    default:
+    break;
+    }
+    return (KE_MSG_CONSUMED);
+}
+
+static int gapc_get_dev_info_req_ind_handler(ke_msg_id_t const msgid,
+        struct gapc_get_dev_info_req_ind const *param,
+        ke_task_id_t const dest_id,
+        ke_task_id_t const src_id)
+{
+    switch(param->req)
+    {
+    case GAPC_DEV_NAME:
+    {
+        struct gapc_get_dev_info_cfm * cfm = KE_MSG_ALLOC_DYN(GAPC_GET_DEV_INFO_CFM,
+                                             src_id, dest_id,
+                                             gapc_get_dev_info_cfm, APP_DEVICE_NAME_MAX_LEN);
+        cfm->req = param->req;
+        cfm->info.name.length = appm_get_dev_name(cfm->info.name.value);
+        // Send message
+        ke_msg_send(cfm);
+        UART_PRINTF("get_dev_info GAPC_DEV_NAME\r\n");
+    }
+    break;
+
+        case GAPC_DEV_APPEARANCE:
+        {
+            // Allocate message
+            struct gapc_get_dev_info_cfm *cfm = KE_MSG_ALLOC(GAPC_GET_DEV_INFO_CFM,
+                                                    src_id, dest_id,
+                                                    gapc_get_dev_info_cfm);
+            cfm->req = param->req;
+            
+            // No appearance
+            cfm->info.appearance = 0;
+
+            // Send message
+            ke_msg_send(cfm);
+        } break;
+
+        case GAPC_DEV_SLV_PREF_PARAMS:
+        {
+            // Allocate message
+            struct gapc_get_dev_info_cfm *cfm = KE_MSG_ALLOC(GAPC_GET_DEV_INFO_CFM,
+                    								src_id, dest_id,
+                                                    gapc_get_dev_info_cfm);
+            cfm->req = param->req;
+            // Slave preferred Connection interval Min
+            cfm->info.slv_params.con_intv_min = 8;
+            // Slave preferred Connection interval Max
+            cfm->info.slv_params.con_intv_max = 10;
+            // Slave preferred Connection latency
+            cfm->info.slv_params.slave_latency = 180;
+            // Slave preferred Link supervision timeout
+            cfm->info.slv_params.conn_timeout  = 600;  // 6s (600*10ms)
+
+            // Send message
+            ke_msg_send(cfm);
+        } break;
+
+        default: /* Do Nothing */
+			break;
+    }
+
+
+    return (KE_MSG_CONSUMED);
+}
+/**
+ ****************************************************************************************
+ * @brief Handles GAPC_SET_DEV_INFO_REQ_IND message.
+ *
+ * @param[in] msgid     Id of the message received.
+ * @param[in] param     Pointer to the parameters of the message.
+ * @param[in] dest_id   ID of the receiving task instance (TASK_GAP).
+ * @param[in] src_id    ID of the sending task instance.
+ *
+ * @return If the message was consumed or not.
+ ****************************************************************************************
+ */
+static int gapc_set_dev_info_req_ind_handler(ke_msg_id_t const msgid,
+        struct gapc_set_dev_info_req_ind const *param,
+        ke_task_id_t const dest_id,
+        ke_task_id_t const src_id)
+{
+	// Set Device configuration
+	struct gapc_set_dev_info_cfm* cfm = KE_MSG_ALLOC(GAPC_SET_DEV_INFO_CFM, src_id, dest_id,
+                                                 gapc_set_dev_info_cfm);
+	// Reject to change parameters
+	cfm->status = GAP_ERR_REJECTED;
+	cfm->req = param->req;
+	// Send message
+	ke_msg_send(cfm);
+
+	return (KE_MSG_CONSUMED);
+}
+
+/*******************************************************************************
+ * Function: gapc_le_pkt_size_ind_handler
+ * Description: GAPC_LE_PKT_SIZE_IND
+ * Input: msgid   -Id of the message received.
+ *		  param   -Pointer to the parameters of the message.
+ *		  dest_id -ID of the receiving task instance
+ *		  src_id  -ID of the sending task instance.
+ * Return: If the message was consumed or not.
+ * Others: void
+*******************************************************************************/
+static int gapc_le_pkt_size_ind_handler (ke_msg_id_t const msgid, 
+									const struct gapc_le_pkt_size_ind  *param,
+                 					ke_task_id_t const dest_id, ke_task_id_t const src_id)
+{
+    uint8_t conidx = KE_IDX_GET(src_id);
+   	UART_PRINTF("%s msgid:0x%x,dest_id:0x%x,src_id:0x%x\r\n",__func__,msgid,dest_id,src_id);
+    UART_PRINTF("conidx:%x,",conidx);
+	UART_PRINTF("1max_rx_octets = %d\r\n",param->max_rx_octets);
+	UART_PRINTF("1max_rx_time = %d\r\n",param->max_rx_time);
+	UART_PRINTF("1max_tx_octets = %d\r\n",param->max_tx_octets);
+	UART_PRINTF("1max_tx_time = %d\r\n",param->max_tx_time);
+	
+	return KE_MSG_CONSUMED;
+}
+
+
+/**
+ ****************************************************************************************
+ * @brief   GAPC_PARAM_UPDATE_REQ_IND
+ * @param[in] msgid     Id of the message received.
+ * @param[in] param     Pointer to the parameters of the message.
+ * @param[in] dest_id   ID of the receiving task instance
+ * @param[in] src_id    ID of the sending task instance.
+ *
+ * @return If the message was consumed or not.
+ ****************************************************************************************
+ */
+static int gapc_param_update_req_ind_handler(ke_msg_id_t const msgid,
+                                struct gapc_param_update_req_ind const *param,
+                                ke_task_id_t const dest_id,
+                                ke_task_id_t const src_id)
+{
+	UART_PRINTF("%s \r\n", __func__);
+	// Prepare the GAPC_PARAM_UPDATE_CFM message
+    struct gapc_param_update_cfm *cfm = KE_MSG_ALLOC(GAPC_PARAM_UPDATE_CFM,
+                                             src_id, dest_id,
+                                             gapc_param_update_cfm);
+	 
+	cfm->ce_len_max = 0xffff;
+	cfm->ce_len_min = 0xffff;
+	cfm->accept = true; 
+
+	// Send message
+    ke_msg_send(cfm);
+	 
+	return (KE_MSG_CONSUMED);
+}
+
+/**
+ ****************************************************************************************
+ * @brief  GAPC_PARAM_UPDATED_IND
+ * @param[in] msgid     Id of the message received.
+ * @param[in] param     Pointer to the parameters of the message.
+ * @param[in] dest_id   ID of the receiving task instance
+ * @param[in] src_id    ID of the sending task instance.
+ *
+ * @return If the message was consumed or not.
+ ****************************************************************************************
+ */
+static int gapc_param_updated_ind_handler (ke_msg_id_t const msgid, 
+									const struct gapc_param_updated_ind  *param,
+                 					ke_task_id_t const dest_id, ke_task_id_t const src_id)
+{
+    uint8_t conidx = KE_IDX_GET(src_id);
+    UART_PRINTF("appc %s dest_id:0x%x,src_id:0x%x\r\n", __func__,dest_id,src_id);
+    UART_PRINTF("conidx:%x\r\n",conidx);
+	UART_PRINTF("con_interval = %d\r\n",param->con_interval);
+	UART_PRINTF("con_latency = %d\r\n",param->con_latency);
+	UART_PRINTF("sup_to = %d\r\n",param->sup_to);
+	
+	return KE_MSG_CONSUMED;
+}
+uint8_t USER_MTU_SIZE = 20;
+/**
+ ****************************************************************************************
+ * @brief  GATTC_MTU_CHANGED_IND
+ * @param[in] msgid     Id of the message received.
+ * @param[in] param     Pointer to the parameters of the message.
+ * @param[in] dest_id   ID of the receiving task instance
+ * @param[in] src_id    ID of the sending task instance.
+ *
+ * @return If the message was consumed or not.
+ ****************************************************************************************
+ */
+static int gattc_mtu_changed_ind_handler(ke_msg_id_t const msgid,
+                                     struct gattc_mtu_changed_ind const *ind,
+                                     ke_task_id_t const dest_id,
+                                     ke_task_id_t const src_id)
+{
+    uint8_t conidx = KE_IDX_GET(src_id);
+	UART_PRINTF("%s msgid:0x%x,dest_id:0x%x,src_id:0x%x\r\n",__func__,msgid,dest_id,src_id);
+    UART_PRINTF("conidx:%x,",conidx);
+	UART_PRINTF("ind->mtu = %d,seq = %d\r\n",ind->mtu,ind->seq_num);
+	USER_MTU_SIZE = ind->mtu - 3;
+ 	return (KE_MSG_CONSUMED);
+}
+
+
+/**
+ ****************************************************************************************
+ * @brief Handles connection complete event from the GAP. Enable all required profiles
+ *
+ * @param[in] msgid     Id of the message received.
+ * @param[in] param     Pointer to the parameters of the message.
+ * @param[in] dest_id   ID of the receiving task instance (TASK_GAP).
+ * @param[in] src_id    ID of the sending task instance.
+ *
+ * @return If the message was consumed or not.
+ ****************************************************************************************
+ */
+extern ble_dev_info slave_device;
+static int gapc_connection_req_ind_handler(ke_msg_id_t const msgid,
+                                           struct gapc_connection_req_ind const *param,
+                                           ke_task_id_t const dest_id,
+                                           ke_task_id_t const src_id)
+{	
+	UART_PRINTF("=====================================%s\r\n", __func__);
+    
+    UART_PRINTF("conhdl:0x%x\r\n", param->conhdl);
+    UART_PRINTF("role:%s\r\n", (param->con_role == 0) ? "Master":"Slave");
+    //Device role - 0=Master/ 1=Slave
+    
+    UART_PRINTF("con_interval:%02f ms\r\n", param->con_interval * 1.25);
+    UART_PRINTF("con_latency:%d\r\n", param->con_latency);
+    UART_PRINTF("sup_to:%d ms\r\n", param->sup_to * 10);
+    UART_PRINTF("peer_addr_type:%d %s\r\n", param->peer_addr_type,(param->peer_addr_type == 0) ? "public" : "random");
+    
+    UART_PRINTF("peer_addr:");
+    for(int i = 0; i < GAP_BD_ADDR_LEN;i ++)
+    {
+        UART_PRINTF("%x ",param->peer_addr.addr[i]);
+    }UART_PRINTF("\r\n");
+
+    appm_env.conidx = KE_IDX_GET(src_id);
+    // Check if the received Connection Handle was valid
+    if (appm_env.conidx != GAP_INVALID_CONIDX)
+    {
+        // Retrieve the connection info from the parameters
+        appm_env.conhdl = param->conhdl;
+        // Clear the advertising timeout timer
+        if (ke_timer_active(APP_ADV_TIMEOUT_TIMER, TASK_APPM))
+        {
+            ke_timer_clear(APP_ADV_TIMEOUT_TIMER, TASK_APPM);
+        }
+        // Send connection confirmation
+        struct gapc_connection_cfm *cfm = KE_MSG_ALLOC(GAPC_CONNECTION_CFM,
+                KE_BUILD_ID(TASK_GAPC, appm_env.conidx), TASK_APPM,
+                gapc_connection_cfm);
+
+        cfm->auth = GAP_AUTH_REQ_NO_MITM_NO_BOND;//GAP_AUTH_REQ_NO_MITM_BOND;//;
+        // Send the message
+        ke_msg_send(cfm);
+
+        /*--------------------------------------------------------------
+         * ENABLE REQUIRED PROFILES
+         *--------------------------------------------------------------*/
+         
+        appc_create(appm_env.conidx,param);
+        
+//        BLE_WORK_STA[appm_env.conidx] = BLE_CONN;//
+        if(param->con_role == ROLE_SLAVE)
+        {
+            appm_slave_connection_ind(appm_env.conidx,param);
+        }else
+        {
+            appm_master_connection_ind(appm_env.conidx,param);
+            APPM_FIELD_RECOVER();
+        }
+        
+        
+        //APPM_FIELD_RECOVER();
+
+        //appm_scan_adv_con_schedule();  
+        
+        
+    }
+    else
+    {
+        // No connection has been establish, 
+		UART_PRINTF("No connection has been establish\r\n");
+    }
+
+    return (KE_MSG_CONSUMED);
+    
+}
+
+
+/**
+ ****************************************************************************************
+ * @brief Handles disconnection complete event from the GAP.
+ *
+ * @param[in] msgid     Id of the message received.
+ * @param[in] param     Pointer to the parameters of the message.
+ * @param[in] dest_id   ID of the receiving task instance (TASK_GAP).
+ * @param[in] src_id    ID of the sending task instance.
+ *
+ * @return If the message was consumed or not.
+ ****************************************************************************************
+ */
+static int gapc_disconnect_ind_handler(ke_msg_id_t const msgid,
+                                      struct gapc_disconnect_ind const *param,
+                                      ke_task_id_t const dest_id,
+                                      ke_task_id_t const src_id)
+{
+	UART_PRINTF("======appm====================gapc_disconnect_ind_handler link reason = 0x%x,dest_id:0x%x,src_id:0x%x\r\n",param->reason,dest_id,src_id);
+
+    int idx = KE_IDX_GET(src_id);
+    int type = KE_TYPE_GET(src_id);
+    //uint16_t conhdl = param->conhdl;
+    
+    struct appc_env_tag *env = appc_env[idx];
+	// Go to the ready state
+//	ke_state_set(TASK_APPM, APPM_DISCONNECT);
+//    BLE_WORK_STA[idx] = BLE_DISCONN;
+    //UART_PRINTF("\r\nBLE_WORK_STA[%d] = BLE_DISCONN\r\n",idx);
+
+	wdt_disable_flag = 1;
+    //mHWreg_Assign_XVR_Regsiter(08, 0x2DD04005);///
+
+    UART_PRINTF("idx:0x%x,type:0x%x,role:%s\r\n",idx,type,(env->role == ROLE_SLAVE) ? "ROLE_SLAVE" :"ROLE_MASTER");
+    
+    UART_PRINTF("peer_addr:");
+    for(int i = 0; i < GAP_BD_ADDR_LEN;i ++)
+    {
+        UART_PRINTF("%x ",appc_env[idx]->con_dev_addr.addr.addr[i]);
+    }UART_PRINTF("\r\n");
+	// Restart Advertising
+	//appm_start_advertising();
+    if(env->role == ROLE_SLAVE)
+    {
+        uint8_t  cur_state = ke_state_get(TASK_APPM);
+//        if(master_device_num > 0)master_device_num--;
+//        uint8_t dvice_chn;
+        APPM_SET_FIELD(ADV_EN,1);
+        UART_PRINTF("APPM_SET_FIELD(ADV_EN,1)\r\n");
+        appm_scan_adv_con_schedule();//test
+        cur_state = ke_state_get(TASK_APPM);
+        UART_PRINTF("adv on cur_state 1:%d\r\n",cur_state);
+        if(appm_env.slave_num > 0)appm_env.slave_num--;
+        aos_cli_printf("\r\n+GATTSTAT=%d,1\r\n",idx);
+        
+    }else // 
+    {
+  
+        if(appm_env.master_num > 0)appm_env.master_num--;
+        UART_PRINTF("appm_env.master_num:0x%x\r\n",appm_env.master_num);
+                 
+     //   con_dev_addr_flag_set(appc_env[idx]->con_dev_addr.addr,0);
+
+        if((appm_env.features & APPM_SLAVE_MODE) == APPM_SLAVE_MODE)
+        {
+                   
+        }
+        if(param->reason == CO_ERROR_CONN_FAILED_TO_BE_EST)//0X3E
+        {
+            if(appm_env.recon_num > 0)
+            {
+                appm_env.recon_num--;
+                appm_start_connencting(appc_env[idx]->con_dev_addr);
+            }else
+            {            
+                 UART_PRINTF("recon_num %d can't connect peer dev!!!\r\n",APPM_RECONNENCT_DEVICE_NUM);
+            }
+            
+        }else
+        {
+            aos_cli_printf("\r\n+GATTSTAT=%d,1\r\n",idx);
+        }
+        
+
+    }
+    if(ke_state_get(TASK_APPM) !=  APPM_CONNECTING)
+    {
+        appm_scan_adv_con_schedule();
+    }
+    
+    appc_cleanup(idx);
+
+	
+    return (KE_MSG_CONSUMED);
+}
+
+
+/**
+ ****************************************************************************************
+ * @brief Handles profile add indication from the GAP.
+ *
+ * @param[in] msgid     Id of the message received.
+ * @param[in] param     Pointer to the parameters of the message.
+ * @param[in] dest_id   ID of the receiving task instance (TASK_GAP).
+ * @param[in] src_id    ID of the sending task instance.
+ *
+ * @return If the message was consumed or not.
+ ****************************************************************************************
+ */
+static int gapm_profile_added_ind_handler(ke_msg_id_t const msgid,
+                                          struct gapm_profile_added_ind *param,
+                                          ke_task_id_t const dest_id,
+                                          ke_task_id_t const src_id)
+{
+    // Current State
+    uint8_t state = ke_state_get(dest_id);
+    return KE_MSG_CONSUMED;
+}
+
+
+
+
+
+/*******************************************************************************
+ * Function: app_period_timer_handler
+ * Description: app period timer process
+ * Input: msgid -Id of the message received.
+ *		  param -Pointer to the parameters of the message.
+ *		  dest_id -ID of the receiving task instance (TASK_GAP).
+ *		  ID of the sending task instance.
+ * Return: If the message was consumed or not.
+ * Others: void
+*******************************************************************************/
+static int app_period_timer_handler(ke_msg_id_t const msgid,
+                                          void const *param,
+                                          ke_task_id_t const dest_id,
+                                          ke_task_id_t const src_id)
+{
+   	UART_PRINTF("%s\r\n", __func__);
+
+//    if(ke_state_get(TASK_APP) == APPM_IDLE)
+//    {
+//        UART_PRINTF("GAPM_PROFILE_TASK_ADD appm_start_scanning \r\n");
+//        appm_start_scanning();
+//    }
+//    if(ke_state_get(TASK_APP) == APPM_CONNECTED)
+//    {
+//    
+//        ke_state_set(TASK_APP,APPM_IDLE);
+//        appm_start_advertising();
+//    }   
+		
+    return KE_MSG_CONSUMED;
+}
+
+uint8_t send_uuid_read_flag = 0;
+static int app_send_smpreq_handler(ke_msg_id_t const msgid,
+                                    struct gapm_profile_added_ind *param,
+                                    ke_task_id_t const dest_id,
+                                    ke_task_id_t const src_id)
+
+{
+		//ke_timer_set(APP_SEND_SMPREQ_TIMER,TASK_APP,100); // 1S,call att read per one second
+		if(send_uuid_read_flag ==0)
+		{
+		
+            // generate a local bond command to update correctly internal state machine
+            struct gapc_bond_cmd *cmd = KE_MSG_ALLOC(GAPC_BOND_CMD,
+                                    KE_BUILD_ID(TASK_GAPC, 0), KE_BUILD_ID(TASK_GAPC, 0),  //codix -> 0
+                                        gapc_bond_cmd);
+            cmd->operation = GAPC_BOND;
+            cmd->pairing.iocap = 0x04;
+            cmd->pairing.oob = 0x00;
+            cmd->pairing.auth = 0x05;
+            cmd->pairing.key_size = 16;
+            cmd->pairing.ikey_dist = 0x05;
+            cmd->pairing.rkey_dist = 0x05;
+            // Keep the packet for later use
+            //memcpy(&(cmd->pairing), &(pdu->data.pairing_req.iocap), SMPC_CODE_PAIRING_REQ_RESP_LEN - 1);
+            ke_msg_send(cmd);
+
+		}
+		else
+		{
+//			appm_read_uuid_data_req(0xfa02);  //for mater uuid read
+		}
+		return KE_MSG_CONSUMED;	
+}
+
+
+/**
+ ****************************************************************************************
+ * @brief Handles reception of all messages sent from the lower layers to the application
+ * @param[in] msgid     Id of the message received.
+ * @param[in] param     Pointer to the parameters of the message.
+ * @param[in] dest_id   ID of the receiving task instance
+ * @param[in] src_id    ID of the sending task instance.
+ *
+ * @return If the message was consumed or not.
+ ****************************************************************************************
+ */
+static int appm_msg_handler(ke_msg_id_t const msgid,
+                            void *param,
+                            ke_task_id_t const dest_id,
+                            ke_task_id_t const src_id)
+{
+    // Retrieve identifier of the task from received message
+    ke_task_id_t src_task_id = MSG_T(msgid);
+    // Message policy
+    uint8_t msg_pol          = KE_MSG_CONSUMED;
+
+  //  UART_PRINTF("%s msgid:0x%x,dest_id:0x%x,src_id:0x%x\r\n",__func__,msgid,dest_id,src_id);
+    switch (src_task_id)
+    {
+        case (TASK_ID_GAPC):
+        {
+#if (BLE_APP_SEC)
+//#if 1  //add 180711
+
+        if ((msgid >= GAPC_BOND_CMD)&&(msgid <= GAPC_SECURITY_IND))
+        {
+            // Call the Security Module        
+            msg_pol = appm_get_handler(&app_sec_table_handler, msgid, param, src_id);
+        }
+#endif //(BLE_APP_SEC)
+        }
+        break;
+
+        case (TASK_ID_GATTC):
+        {
+            // Service Changed - Drop
+        } break;
+        
+        case (TASK_ID_FFF0S):
+        {
+            // Call the Health Thermometer Module
+            msg_pol = appm_get_handler(&app_fff0_table_handler, msgid, param, src_id);
+        } break;
+        
+        default:
+        {
+        } break;
+    }
+
+    return (msg_pol);
+}
+
+
+#if 1
+//struct adv_addr_list_t adv_addr_list;
+
+uint8_t con_dev_str_name0[] =	"BK3435-GATT0";
+uint8_t con_dev_str_name1[] =	"BK3435-GATT1";
+uint8_t con_dev_str_name2[] =	"BK3435-GATT2";
+
+struct con_dev_list_t
+{
+    uint8_t con_flag;
+    bd_addr_t con_addr; 
+};
+
+#define CON_DEV_LIST_MAX  3
+struct con_dev_list_t con_dev[CON_DEV_LIST_MAX] =
+{
+    [ 0 ] = {0,{0x30,0x22,0xaa,0xbb,0xcc,0xdd}},
+    [ 1 ] = {0,{0x31,0x22,0xaa,0xbb,0xcc,0xdd}},
+    [ 2 ] = {0,{0x32,0x22,0xaa,0xbb,0xcc,0xdd}},
+};
+
+
+uint8_t con_dev_addr_find(struct bd_addr bd_addr1)
+{
+    uint8_t find =0;
+    for(int i = 0 ;i < CON_DEV_LIST_MAX;i++)
+    {
+        if((memcmp(con_dev[i].con_addr.addr,bd_addr1.addr,6) == 0) && (con_dev[i].con_flag == 0))
+        {
+            find = 1;
+           
+            return find;
+        }
+    }
+    return find;
+}
+
+uint8_t con_dev_addr_check(struct bd_addr bd_addr1)
+{
+    uint8_t find =0;
+    for(int i = 0 ;i < CON_DEV_LIST_MAX;i++)
+    {
+        if((memcmp(con_dev[i].con_addr.addr,bd_addr1.addr,6) == 0) && (con_dev[i].con_flag == 0))
+        {
+            find = 1;
+           
+            return find;
+        }
+    }
+    return find;
+}
+
+uint8_t con_dev_addr_flag_set(bd_addr_t bd_addr1,uint8_t flag)
+{
+    uint8_t find =0;
+    for(int i = 0 ;i < CON_DEV_LIST_MAX;i++)
+    {
+        if((memcmp(con_dev[i].con_addr.addr,bd_addr1.addr,6) == 0))
+        {
+            con_dev[i].con_flag = flag;   
+            find =  1  ;       
+            return find;
+        }
+    }
+    return find;
+}
+//uint8_t con_dev_str_name[] =	"BK3435-GATT";
+static int gapm_adv_report_ind_handler(ke_msg_id_t const msgid, struct adv_report const *param,
+                                       ke_task_id_t const dest_id, ke_task_id_t const src_id)
+{
+    uint8_t find = 0 ;
+  
+    uint8_t filter =0;
+    if(APPM_GET_FIELD(SCAN_EN) == 0)
+    {
+        UART_PRINTF("scan stoped!!!!!\r\n");
+        return KE_MSG_CONSUMED;
+    }
+    
+  //  memcpy(addr.addr,param->adv_addr)
+    filter = appm_add_adv_report_to_filter(param);
+//    adv_addr_list.adv_report_num++;
+    if(filter >= ADV_REPORT_DEV_NUM)//ADV_REPORT_DEV_NUM
+    {
+        UART_PRINTF("adv_report_num:%d\r\n",filter);
+        return KE_MSG_CONSUMED; 
+    }
+    
+    if(filter == (ADV_REPORT_DEV_NUM - 1))
+    {    
+        if (ke_timer_active(APPM_SCAN_TIMEOUT_TIMER, TASK_APPM))
+        {
+            ke_timer_set(APPM_SCAN_TIMEOUT_TIMER, TASK_APPM,1);
+
+        }
+    //  UART_PRINTF()  
+       return KE_MSG_CONSUMED; 
+    }
+        
+    if(0)
+    {
+        UART_PRINTF("\r\n\r\n####################################################################\r\n");
+        UART_PRINTF("adv_addr_list.nums:%d\r\n",filter);
+        UART_PRINTF("# evt_type = %x  :%s\r\n",param->evt_type,(param->evt_type == LL_ADV_CONN_UNDIR) ? "LL_ADV_CONN_UNDIR" 
+        :(param->evt_type == LL_ADV_CONN_DIR)? "LL_ADV_CONN_DIR" : (param->evt_type == LL_ADV_NONCONN_UNDIR)? "LL_ADV_NONCONN_UNDIR" : 
+        (param->evt_type == LL_SCAN_RSP)? "LL_SCAN_RSP":"Unknow");
+        UART_PRINTF("# addr_type :%d --%s\r\n",param->adv_addr_type,(param->adv_addr_type == 0)? "public" :"random");
+        UART_PRINTF("# adv_addr = %02x:%02x:%02x:%02x:%02x:%02x\r\n",param->adv_addr.addr[0],param->adv_addr.addr[1],param->adv_addr.addr[2],param->adv_addr.addr[3],param->adv_addr.addr[4],param->adv_addr.addr[5]);
+        find = appm_adv_data_decode(param->data_len, param->data,con_dev_str_name0,sizeof(con_dev_str_name0)-1);
+        UART_PRINTF("# rssi = %d\r\n\r\n",param->rssi);
+        UART_PRINTF("# adv_data = ");
+        for(int len = 0; len < param->data_len; len++)
+        {
+            UART_PRINTF("%02x ",param->data[len]);
+        }
+        UART_PRINTF("\r\n####################################################################\r\n");
+    }
+
+    if(0)//con_dev_addr_find(param->adv_addr) && (!appm_env.scan_dev_find))
+    {
+        appm_env.con_dev_addr.addr_type = param->adv_addr_type;
+        memcpy(appm_env.con_dev_addr.addr.addr,param->adv_addr.addr,6);
+        
+      //  appm_env.scan_dev_find = 1;
+      //  APPM_SET_FIELD(SCAN_EN,0);
+      //  APPM_SET_FIELD(ADV_EN,0);
+       // UART_PRINTF("# find = %d\r\n\r\n",appm_env.scan_dev_find);
+    if(1)
+    {
+        UART_PRINTF("\r\n\r\n####################################################################\r\n");
+        UART_PRINTF("adv_addr_list.nums:%d\r\n",filter);
+        UART_PRINTF("# evt_type = %x  :%s\r\n",param->evt_type,(param->evt_type == LL_ADV_CONN_UNDIR) ? "LL_ADV_CONN_UNDIR" 
+        :(param->evt_type == LL_ADV_CONN_DIR)? "LL_ADV_CONN_DIR" : (param->evt_type == LL_ADV_NONCONN_UNDIR)? "LL_ADV_NONCONN_UNDIR" : 
+        (param->evt_type == LL_SCAN_RSP)? "LL_SCAN_RSP":"Unknow");
+        UART_PRINTF("# addr_type :%d --%s\r\n",param->adv_addr_type,(param->adv_addr_type == 0)? "public" :"random");
+        UART_PRINTF("# adv_addr = %02x:%02x:%02x:%02x:%02x:%02x\r\n",param->adv_addr.addr[0],param->adv_addr.addr[1],param->adv_addr.addr[2],param->adv_addr.addr[3],param->adv_addr.addr[4],param->adv_addr.addr[5]);
+        find = appm_adv_data_decode(param->data_len, param->data,con_dev_str_name0,sizeof(con_dev_str_name0)-1);
+        UART_PRINTF("# rssi = %d\r\n",param->rssi);
+        UART_PRINTF("# find = %d\r\n\r\n",find);
+        UART_PRINTF("# adv_data = ");
+        for(int len = 0; len < param->data_len; len++)
+        {
+            UART_PRINTF("%02x ",param->data[len]);
+        }
+        UART_PRINTF("\r\n####################################################################\r\n");
+    }
+      //  appm_start_connencting(con_bdaddr);
+        UART_PRINTF("# con addr = %02x:%02x:%02x:%02x:%02x:%02x\r\n",param->adv_addr.addr[0],param->adv_addr.addr[1],param->adv_addr.addr[2],
+	 	                                                                                       param->adv_addr.addr[3],param->adv_addr.addr[4],param->adv_addr.addr[5]);
+    }
+
+
+    return KE_MSG_CONSUMED;
+}
+#endif
+ 
+
+static int app_adv_evt_end_handler(ke_msg_id_t const msgid,
+                                     void const *ind,
+                                     ke_task_id_t const dest_id,
+                                     ke_task_id_t const src_id)
+{
+
+    appm_scan_adv_con_schedule();
+    return (KE_MSG_CONSUMED);
+}
+
+static int app_scan_evt_end_handler(ke_msg_id_t const msgid,
+                                     void const *ind,
+                                     ke_task_id_t const dest_id,
+                                     ke_task_id_t const src_id)
+{
+    static uint8_t scan_cnt = 0;
+    
+    if(scan_cnt++ == appm_env.scan_num)
+    {
+        appm_scan_adv_con_schedule();
+        scan_cnt = 0;
+    }    
+    //UART_PRINTF("scan_evt_end \r\n");   
+    //appm_scan_adv_con_schedule();
+    return (KE_MSG_CONSUMED);
+}
+//uint8_t appm_adv_data_decode_name(uint8_t len,const uint8_t *data,uint8_t *name_str);
+static int appm_scan_dev_timerout_handler(ke_msg_id_t const msgid,
+                                          struct gapm_profile_added_ind *param,
+                                          ke_task_id_t const dest_id,
+                                          ke_task_id_t const src_id)
+                                              
+{
+    UART_PRINTF("appm_con_dev_timerout_handler\r\n");
+    uint8_t str_buf[31];
+    //uint8_t str_name;
+    memset(str_buf,0,31);
+    APPM_SET_FIELD(SCAN_EN,0);
+    appm_scan_adv_con_schedule();
+    USER_PRINTF("\r\n+SCAN{\r\n");
+
+    appm_scan_adv_repor();
+    USER_PRINTF("+SCAN}\r\n");
+    appm_adv_report_filter_free();
+    
+           
+    return (KE_MSG_CONSUMED);
+}
+
+
+extern uint8_t free_channel_search(void);
+static int appm_con_dev_timerout_handler(ke_msg_id_t const msgid,
+                                          struct gapm_profile_added_ind *param,
+                                          ke_task_id_t const dest_id,
+                                          ke_task_id_t const src_id)
+                                              
+{
+    UART_PRINTF("appm_con_dev_timerout_handler\r\n");
+    if (ke_state_get(TASK_APPM) == APPM_CONNECTING)
+    {
+       // appm_scan_adv_con_schedule();
+        appm_stop_connencting();
+        aos_cli_printf("\r\n+GATTSTAT=%d,1\r\n",free_channel_search());
+    }
+    
+    return (KE_MSG_CONSUMED);
+}
+
+/*
+ * GLOBAL VARIABLES DEFINITION
+ ****************************************************************************************
+ */
+
+/* Default State handlers definition. */
+const struct ke_msg_handler appm_default_state[] =
+{
+    // Note: first message is latest message checked by kernel so default is put on top.
+    {KE_MSG_DEFAULT_HANDLER,    	(ke_msg_func_t)appm_msg_handler},
+    {APP_ADV_TIMEOUT_TIMER,         (ke_msg_func_t)app_adv_timeout_handler},
+    
+    {GAPM_DEVICE_READY_IND,         (ke_msg_func_t)gapm_device_ready_ind_handler},
+    {GAPM_PROFILE_ADDED_IND,    	(ke_msg_func_t)gapm_profile_added_ind_handler},
+    {GAPM_CMP_EVT,             		(ke_msg_func_t)gapm_cmp_evt_handler},
+    
+    {GAPC_GET_DEV_INFO_REQ_IND, 	(ke_msg_func_t)gapc_get_dev_info_req_ind_handler},
+    {GAPC_SET_DEV_INFO_REQ_IND, 	(ke_msg_func_t)gapc_set_dev_info_req_ind_handler},    
+    {GAPC_CONNECTION_REQ_IND,   	(ke_msg_func_t)gapc_connection_req_ind_handler},
+    {GAPC_DISCONNECT_IND,       	(ke_msg_func_t)gapc_disconnect_ind_handler},
+    
+    {GAPC_LE_PKT_SIZE_IND,			(ke_msg_func_t)gapc_le_pkt_size_ind_handler},
+    {GAPC_PARAM_UPDATE_REQ_IND, 	(ke_msg_func_t)gapc_param_update_req_ind_handler},
+    {GAPC_PARAM_UPDATED_IND,		(ke_msg_func_t)gapc_param_updated_ind_handler},
+    
+    {GATTC_MTU_CHANGED_IND,         (ke_msg_func_t)gattc_mtu_changed_ind_handler},
+
+    {GAPM_ADV_REPORT_IND,           (ke_msg_func_t)gapm_adv_report_ind_handler},
+    {APP_PERIOD_TIMER,              (ke_msg_func_t)app_period_timer_handler},
+    {APP_SEND_SMPREQ_TIMER,         (ke_msg_func_t)app_send_smpreq_handler},
+    {USER_LLD_EVT_ADV_END,          (ke_msg_func_t)app_adv_evt_end_handler},
+    {USER_LLD_EVT_SCAN_END,         (ke_msg_func_t)app_scan_evt_end_handler},
+    
+   
+    {APPM_SCAN_TIMEOUT_TIMER,        (ke_msg_func_t)appm_scan_dev_timerout_handler},
+    {APPM_CON_TIMEOUT_TIMER,        (ke_msg_func_t)appm_con_dev_timerout_handler},
+    
+//    {SUBLE_TIMER0,                  (ke_msg_func_t)suble_timer0_handler},
+//    {SUBLE_TIMER1,                  (ke_msg_func_t)suble_timer1_handler},
+//    {SUBLE_TIMER2,                  (ke_msg_func_t)suble_timer2_handler},
+//    {SUBLE_TIMER3,                  (ke_msg_func_t)suble_timer3_handler},
+//    {SUBLE_TIMER4,                  (ke_msg_func_t)suble_timer4_handler},
+//    {SUBLE_TIMER5,                  (ke_msg_func_t)suble_timer5_handler},
+//    {SUBLE_TIMER6,                  (ke_msg_func_t)suble_timer6_handler},
+//    {SUBLE_TIMER7,                  (ke_msg_func_t)suble_timer7_handler},
+//    {SUBLE_TIMER8,                  (ke_msg_func_t)suble_timer8_handler},
+//    {SUBLE_TIMER9,                  (ke_msg_func_t)suble_timer9_handler},
+//    {SUBLE_TIMER10,                 (ke_msg_func_t)suble_timer10_handler},
+//    {SUBLE_TIMER11,                 (ke_msg_func_t)suble_timer11_handler},
+//    {SUBLE_TIMER12,                 (ke_msg_func_t)suble_timer12_handler},
+//    {SUBLE_TIMER13,                 (ke_msg_func_t)suble_timer13_handler},
+//    {SUBLE_TIMER14,                 (ke_msg_func_t)suble_timer14_handler},
+//    {SUBLE_TIMER15,                 (ke_msg_func_t)suble_timer15_handler},
+//    {SUBLE_TIMER16,                 (ke_msg_func_t)suble_timer16_handler},
+//    {SUBLE_TIMER17,                 (ke_msg_func_t)suble_timer17_handler},
+//    {SUBLE_TIMER18,                 (ke_msg_func_t)suble_timer18_handler},
+//    {SUBLE_TIMER19,                 (ke_msg_func_t)suble_timer19_handler},
+};
+
+/* Specifies the message handlers that are common to all states. */
+const struct ke_state_handler appm_default_handler = KE_STATE_HANDLER(appm_default_state);
+
+/* Defines the place holder for the states of all the task instances. */
+ke_state_t appm_state[APPM_IDX_MAX];
+
+#endif //(BLE_APP_PRESENT)
+
+/// @} APPTASK

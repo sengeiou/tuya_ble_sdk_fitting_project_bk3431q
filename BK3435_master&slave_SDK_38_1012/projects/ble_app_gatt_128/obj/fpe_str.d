@@ -1,0 +1,12 @@
+.\obj\fpe_str.o: ..\..\..\tuya_ble_sdk_demo\src\cpt\fpe_tuya\fpe_str.c
+.\obj\fpe_str.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+.\obj\fpe_str.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+.\obj\fpe_str.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+.\obj\fpe_str.o: ..\..\..\tuya_ble_sdk_demo\src\cpt\fpe_tuya\fpe_str.h
+.\obj\fpe_str.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+.\obj\fpe_str.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\obj\fpe_str.o: ..\..\..\tuya_ble_sdk_demo\src\cpt\fpe_tuya\ff1_common.h
+.\obj\fpe_str.o: ..\..\..\tuya_ble_sdk_demo\src\cpt\fpe_tuya\fpe_config.h
+.\obj\fpe_str.o: ..\..\..\tuya_ble_sdk_demo\src\tuya_ble_sdk\sdk\include\tuya_ble_heap.h
+.\obj\fpe_str.o: ..\..\..\tuya_ble_sdk_demo\src\tuya_ble_sdk\port\tuya_ble_stdlib.h
+.\obj\fpe_str.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
