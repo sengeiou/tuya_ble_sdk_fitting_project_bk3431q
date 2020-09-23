@@ -51,11 +51,11 @@ enum appm_state
     APPM_ADVERTISTING_END       = 5,
     APPM_SCANNING               = 6,
     APPM_WAIT_SCAN_END          = 7,
-    APPM_SCAN_END               = 8,
+    APPM_SCAN_END               = 8, 
     APPM_CONNECTING             = 9,
     APPM_LINK_CONNECTED         = 10,//for slave
     APPM_SDP_DISCOVERING        = 11,//for master
-    APPM_CONNECTED              = APPM_IDLE,//Prf Connected //for master
+    APPM_CONNECTED              = 12,//APPM_IDLE,//Prf Connected //for master
     APPM_DISCONNECT             = 13,
     APPM_STATE_MAX
 };
@@ -65,6 +65,7 @@ enum appm_msg
     APPM_DUMMY_MSG = TASK_FIRST_MSG(TASK_ID_APPM),
     APPM_SCAN_TIMEOUT_TIMER,
     APPM_CON_TIMEOUT_TIMER,
+    APPM_STOP_ADV_TIMER,
 
 	APP_PERIOD_TIMER,
 	APP_SEND_SMPREQ_TIMER,

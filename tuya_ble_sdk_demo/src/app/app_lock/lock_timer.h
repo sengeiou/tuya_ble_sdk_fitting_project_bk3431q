@@ -41,7 +41,6 @@ typedef enum
     LOCK_TIMER_MASTER_MONITOR,
     LOCK_TIMER_RESET_WITH_DISCONN2,
     LOCK_TIMER_COMMUNICATION_MONITOR,
-    LOCK_TIMER_TO_BE_BOND,
     LOCK_TUMER_MAX,
 } lock_timer_t;
 
@@ -71,7 +70,6 @@ void app_test_reset_outtime_cb_handler(void);
 void app_active_report_outtime_cb_handler(void);
 void reset_with_disconn2_outtime_cb_handler(void);
 void communication_monitor_outtime_cb_handler(void);
-void to_be_bond_outtime_cb_handler(void);
 
 uint32_t lock_timer_time_is_valid(void* time, uint32_t current_timestamp);
 

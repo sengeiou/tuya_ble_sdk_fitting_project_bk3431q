@@ -142,18 +142,6 @@ static void communication_monitor_outtime_cb(tuya_ble_timer_t timer)
 /*********************************************************
 FN: 
 */
-void to_be_bond_outtime_cb_handler(void)
-{
-    suble_adv_stop();
-}
-static void to_be_bond_outtime_cb(void* timer)
-{
-    tuya_ble_app_evt_send(APP_EVT_TIMER_10);
-}
-
-/*********************************************************
-FN: 
-*/
 uint32_t lock_timer_creat(void)
 {
     uint32_t ret = 0;
@@ -166,7 +154,6 @@ uint32_t lock_timer_creat(void)
     ret += app_port_timer_create(&lock_timer[LOCK_TIMER_ACTIVE_REPORT], 30000, SUBLE_TIMER_SINGLE_SHOT, app_active_report_outtime_cb);
     ret += app_port_timer_create(&lock_timer[LOCK_TIMER_RESET_WITH_DISCONN2], 1000, SUBLE_TIMER_SINGLE_SHOT, reset_with_disconn2_outtime_cb);
 	ret += app_port_timer_create(&lock_timer[LOCK_TIMER_COMMUNICATION_MONITOR], 120000, TUYA_BLE_TIMER_SINGLE_SHOT, communication_monitor_outtime_cb);
-    ret += app_port_timer_create(&lock_timer[LOCK_TIMER_TO_BE_BOND], 60000, SUBLE_TIMER_SINGLE_SHOT, to_be_bond_outtime_cb);
     //tuya_ble_xtimer_connect_monitor
     return ret;
 }

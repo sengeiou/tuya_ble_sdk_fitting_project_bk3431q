@@ -200,7 +200,7 @@ void appm_scan_adv_con_schedule(void)
             else if(APPM_GET_FIELD(ADV_EN))
             {
                 ke_state_set(TASK_APPM,APPM_IDLE);
-                appm_start_advertising();              
+                appm_start_advertising();
             }
             else {
                 SUBLE_PRINTF("adv && scan off");
@@ -253,6 +253,8 @@ void appm_scan_adv_con_schedule(void)
             if(!ke_timer_active(APPM_CON_TIMEOUT_TIMER,TASK_APPM))
             {
                 appm_stop_connencting();
+                
+                SUBLE_PRINTF("case APPM_CONNECTING");
                 if(APPM_GET_FIELD(ADV_EN))//test 20190806
                 {
                     ke_state_set(TASK_APPM,APPM_IDLE);
@@ -268,6 +270,7 @@ void appm_scan_adv_con_schedule(void)
         } break;
         
         case APPM_LINK_CONNECTED: { //10
+            #if 0
             if(APPM_GET_FIELD(ADV_EN)) {
                 ke_state_set(TASK_APPM,APPM_IDLE);
                 appm_start_advertising();
@@ -276,6 +279,7 @@ void appm_scan_adv_con_schedule(void)
                 ke_state_set(TASK_APPM,APPM_IDLE);
                 appm_start_scanning();
             }
+            #endif
         } break;
 
         case APPM_DISCONNECT: { //13
@@ -286,6 +290,15 @@ void appm_scan_adv_con_schedule(void)
             else if(APPM_GET_FIELD(SCAN_EN)) {
                 ke_state_set(TASK_APPM,APPM_IDLE);
                 appm_start_scanning();
+            }
+            else {
+                SUBLE_PRINTF("scan && adv off");
+                ke_state_set(TASK_APPM,APPM_IDLE);
+                if(appm_env.con_dev_flag == 1)
+                {
+                    ke_state_set(TASK_APPM,APPM_IDLE);
+                    appm_start_connencting(appm_env.con_dev_addr);
+                }
             }
         } break;
 

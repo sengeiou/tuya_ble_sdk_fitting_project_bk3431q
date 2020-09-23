@@ -93,9 +93,6 @@ static void tuya_ble_sdk_callback(tuya_ble_cb_evt_param_t* event)
             if(event->connect_status == BONDING_CONN) {
                 TUYA_APP_LOG_INFO("bonding and connecting");
                 
-                suble_gpio_rled_period_blink_cancel();
-                lock_timer_stop(LOCK_TIMER_TO_BE_BOND);
-                
                 app_active_report_stop(ACTICE_REPORT_STOP_STATE_BONDING);
                 
                 lock_timer_start(LOCK_TIMER_CONN_PARAM_UPDATE);
@@ -148,15 +145,22 @@ static void tuya_ble_sdk_callback(tuya_ble_cb_evt_param_t* event)
         } break;
         
         //unbond
-        case TUYA_BLE_CB_EVT_UNBOUND:
+        case TUYA_BLE_CB_EVT_UNBOUND: {
+            TUYA_APP_LOG_INFO("TUYA_BLE_CB_EVT_UNBOUND");
+            lock_flash_erease_all();
+            lock_timer_start(LOCK_TIMER_RESET_WITH_DISCONN);
+        } break;
+        
         //unexpected unbond /restore factory setting
         case TUYA_BLE_CB_EVT_ANOMALY_UNBOUND: {
+            TUYA_APP_LOG_INFO("TUYA_BLE_CB_EVT_ANOMALY_UNBOUND");
             lock_factory_handler();
             lock_timer_start(LOCK_TIMER_RESET_WITH_DISCONN);
         } break;
         
         //restore factory setting
         case TUYA_BLE_CB_EVT_DEVICE_RESET: {
+            TUYA_APP_LOG_INFO("TUYA_BLE_CB_EVT_DEVICE_RESET");
             lock_factory_handler();
             lock_timer_start(LOCK_TIMER_RESET_WITH_DISCONN);
         } break;
@@ -276,7 +280,6 @@ static void tuya_ble_app_data_process(int32_t evt_id, void *data)
         } break;
         
         case APP_EVT_TIMER_10: {
-            to_be_bond_outtime_cb_handler();
         } break;
         
         case APP_EVT_TIMER_11: {

@@ -35,6 +35,7 @@
 /*********************************************************************
  * VARIABLE
  */
+volatile uint32_t g_open_fail_count = 0;
 
 /*********************************************************************
  * LOCAL FUNCTION
@@ -49,6 +50,12 @@ FN:
 void tuya_ble_master_port_scan_start(suble_scan_result_handler_t handler)
 {
     suble_scan_start(handler);
+    
+    g_open_fail_count++;
+    TUYA_APP_LOG_INFO("g_open_fail_count: %d", g_open_fail_count);
+    if(g_open_fail_count == 10) {
+        suble_system_reset();
+    }
 }
 
 /*********************************************************

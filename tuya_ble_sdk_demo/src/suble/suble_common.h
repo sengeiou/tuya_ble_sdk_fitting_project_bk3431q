@@ -468,6 +468,7 @@ void suble_key_clear_s_key_press_count(void);
 
 void suble_gpio_open_with_common_pwd(uint8_t hardid, uint16_t slaveid);
 void suble_gpio_open_with_tmp_pwd(uint8_t hardid, uint16_t slaveid);
+void set_s_master_scan_is_running(void);
 
 /* suble_battery
  **************************************************/

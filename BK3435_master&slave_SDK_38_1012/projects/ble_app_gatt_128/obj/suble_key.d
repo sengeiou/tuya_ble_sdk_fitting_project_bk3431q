@@ -109,3 +109,4 @@
 .\obj\suble_key.o: ..\..\..\tuya_ble_sdk_demo\src\app\app_lock\lock_dynamic_pwd.h
 .\obj\suble_key.o: ..\..\..\tuya_ble_sdk_demo\src\app\app_lock\lock_offline_pwd.h
 .\obj\suble_key.o: ..\..\..\tuya_ble_sdk_demo\src\app\app_lock\lock_test.h
+.\obj\suble_key.o: ..\..\..\tuya_ble_sdk_demo\src\app\tuya_ble_sdk_demo\tuya_ble_master_port.h

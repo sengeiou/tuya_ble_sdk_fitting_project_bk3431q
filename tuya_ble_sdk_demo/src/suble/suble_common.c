@@ -45,12 +45,11 @@ void suble_init_func(uint8_t location)
         } break;
         
         case 2: {
+            suble_test_func();
+            
             tuya_ble_app_init();
             
-            if(tuya_ble_connect_status_get() == BONDING_UNCONN) {
-                suble_adv_start();
-            }
-            suble_test_func();
+            suble_adv_start();
         } break;
         
         default: {

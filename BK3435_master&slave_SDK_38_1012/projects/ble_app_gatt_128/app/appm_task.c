@@ -208,7 +208,8 @@ static int gapm_cmp_evt_handler(ke_msg_id_t const msgid,
             if(param->status == GAP_ERR_COMMAND_DISALLOWED) {
                 SUBLE_PRINTF("GAP_ERR_COMMAND_DISALLOWED");
 //                ke_state_set(dest_id, APPM_IDLE);
-//                appm_scan_adv_con_schedule();
+                ke_state_set(TASK_APPM,APPM_IDLE);
+                appm_scan_adv_con_schedule();
             }
         } break;
         
@@ -252,6 +253,8 @@ static int gapm_cmp_evt_handler(ke_msg_id_t const msgid,
             if (param->status == GAP_ERR_CANCELED)
             {
                 if(ke_state_get(TASK_APPM) == APPM_WAIT_ADVERTISTING_END) {
+                    ke_timer_clear(APPM_STOP_ADV_TIMER, TASK_APPM);
+                    
                     ke_state_set(TASK_APPM, APPM_ADVERTISTING_END);
                     SUBLE_PRINTF("APPM_WAIT_ADVERTISTING_END");
                     appm_scan_adv_con_schedule();
@@ -460,9 +463,6 @@ static int gapc_connection_req_ind_handler(ke_msg_id_t const msgid, struct gapc_
         {
             ke_state_set(TASK_APPM, APPM_CONNECTED);
             
-            //关闭广播
-            suble_adv_stop();
-            
             {
                 SUBLE_PRINTF("ROLE_SLAVE Connected");
                 g_conn_info[0].role = ROLE_SLAVE;
@@ -492,8 +492,11 @@ static int gapc_connection_req_ind_handler(ke_msg_id_t const msgid, struct gapc_
                 suble_gap_master_conn_handler();
             }
             
-            appm_field_recover(); //APPM_FIELD_RECOVER();
+//            appm_field_recover(); //APPM_FIELD_RECOVER();
         }
+        
+        //关闭广播
+        suble_adv_stop();
     }
     else {
         SUBLE_PRINTF("No connection has been establish");
@@ -523,8 +526,6 @@ static int gapc_disconnect_ind_handler(ke_msg_id_t const msgid,
             
             suble_gap_disconn_handler();
         }
-        
-        suble_adv_start();
     }
     else //主机
     {
@@ -533,7 +534,7 @@ static int gapc_disconnect_ind_handler(ke_msg_id_t const msgid,
             if(appm_env.recon_num > 0) {
                 appm_env.recon_num--;
                 SUBLE_PRINTF("RECONNECTING");
-                appm_start_connencting(appc_env[idx]->con_dev_addr);
+                set_s_master_scan_is_running();
             } else {
                 SUBLE_PRINTF("recon_num %d can't connect peer dev!!!",APPM_RECONNENCT_DEVICE_NUM);
             }
@@ -549,15 +550,17 @@ static int gapc_disconnect_ind_handler(ke_msg_id_t const msgid,
         }
     }
     
-//    ke_state_set(TASK_APPM, APPM_DISCONNECT);
-    
-    if(ke_state_get(TASK_APPM) !=  APPM_CONNECTING)
-    {
-        appm_scan_adv_con_schedule();
-    }
+//    if(ke_state_get(TASK_APPM) !=  APPM_CONNECTING)
+//    {
+//        appm_scan_adv_con_schedule();
+//    }
     
     appc_cleanup(idx);
 
+    ke_state_set(TASK_APPM, APPM_DISCONNECT);
+
+    suble_adv_start();
+    
     return (KE_MSG_CONSUMED);
 }
 
@@ -620,7 +623,7 @@ static int gapm_adv_report_ind_handler(ke_msg_id_t const msgid, struct adv_repor
 {
     //状态检查
     if(APPM_GET_FIELD(SCAN_EN) == 0) {
-        SUBLE_PRINTF("scan stoped!!!!!");
+//        SUBLE_PRINTF("scan stoped!!!!!");
         return KE_MSG_CONSUMED;
     }
 
@@ -651,7 +654,7 @@ static int app_scan_evt_end_handler(ke_msg_id_t const msgid,
                                     void const *ind,
                                     ke_task_id_t const dest_id, ke_task_id_t const src_id)
 {
-//    appm_scan_adv_con_schedule();
+//    appm_scan_adv_con_schedule(); //扫描期间不开启广播
     return (KE_MSG_CONSUMED);
 }
 
@@ -692,12 +695,36 @@ static int appm_con_dev_timerout_handler(ke_msg_id_t const msgid,
     SUBLE_PRINTF("%s", __func__);
     if (ke_state_get(TASK_APPM) == APPM_CONNECTING)
     {
-        appm_field_recover(); //APPM_FIELD_RECOVER();
+//        appm_field_recover(); //APPM_FIELD_RECOVER();
 //        appm_scan_adv_con_schedule();
         appm_stop_connencting();
         suble_gap_master_connect_timeout_handler();
+
+        suble_adv_start();
     }
 
+    return (KE_MSG_CONSUMED);
+}
+
+static int appm_stop_adv_timerout_handler(ke_msg_id_t const msgid,
+        struct gapm_profile_added_ind *param,
+        ke_task_id_t const dest_id,
+        ke_task_id_t const src_id)
+
+{
+    SUBLE_PRINTF("%s", __func__);
+    
+    ke_state_set(TASK_APPM, APPM_ADVERTISTING_END);
+    SUBLE_PRINTF("APPM_WAIT_ADVERTISTING_END");
+    appm_scan_adv_con_schedule();
+    
+    if(g_adv_restart_glag)
+    {
+        SUBLE_PRINTF("restart adv");
+        g_adv_restart_glag = false;
+        suble_adv_start();
+    }
+    
     return (KE_MSG_CONSUMED);
 }
 
@@ -729,6 +756,7 @@ const struct ke_msg_handler appm_default_state[] =
 
     {APPM_SCAN_TIMEOUT_TIMER,       (ke_msg_func_t)appm_scan_dev_timerout_handler},
     {APPM_CON_TIMEOUT_TIMER,        (ke_msg_func_t)appm_con_dev_timerout_handler},
+    {APPM_STOP_ADV_TIMER,           (ke_msg_func_t)appm_stop_adv_timerout_handler},
 
     {SUBLE_TIMER0,                  (ke_msg_func_t)suble_timer0_handler},
     {SUBLE_TIMER1,                  (ke_msg_func_t)suble_timer1_handler},

@@ -89,6 +89,7 @@ void appm_stop_advertising(void)
 
         //…Ë÷√»ŒŒÒ◊¥Ã¨
         ke_state_set(TASK_APPM, APPM_WAIT_ADVERTISTING_END);
+        ke_timer_set(APPM_STOP_ADV_TIMER,TASK_APPM,500);
     }
 }
 

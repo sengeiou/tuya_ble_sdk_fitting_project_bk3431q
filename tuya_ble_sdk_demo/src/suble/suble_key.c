@@ -1,5 +1,6 @@
 #include "suble_common.h"
 #include "lock_timer.h"
+#include "tuya_ble_master_port.h"
 
 
 
@@ -76,18 +77,10 @@ static void suble_key_state_handler(uint8_t state)
         } break;
         
         case KEY_STATE_PRESSED_2: {
-            uint32_t status = tuya_ble_connect_status_get();
-            if((status == BONDING_CONN) || (status == BONDING_UNCONN)) {
-                lock_factory_handler();
-                lock_play_music(MUSIC_MODE_ONCE, MUSIC_NOTIFY_2);
-            }
-            else {
-                SUBLE_PRINTF("KEY_STATE_PRESSED_2");
-                suble_adv_start();
-                lock_play_music(MUSIC_MODE_ONCE, MUSIC_NOTIFY_1);
-                suble_gpio_rled_period_blink(60, 500);
-                lock_timer_start(LOCK_TIMER_TO_BE_BOND);
-            }
+        } break;
+        
+        case KEY_STATE_RELEASE: {
+            lock_factory_handler();
         } break;
         
         case KEY_STATE_RELEASE_1: {
@@ -101,8 +94,6 @@ static void suble_key_state_handler(uint8_t state)
                 
                 //Ë«»÷
                 SUBLE_PRINTF("hit 2");
-//                lock_play_music(MUSIC_MODE_ONCE, MUSIC_DI_2);
-//                suble_gpio_rled_blink(2, 100);
                 tmp_key_handler(TUYA_BLE_MASTER_OPERATION_CLOSE);
             }
         } break;
@@ -207,8 +198,6 @@ void suble_key_clear_s_key_press_count(void)
     if(s_key_press_count == 1) {
         SUBLE_PRINTF("hit 1");
         
-//        lock_play_music(MUSIC_MODE_ONCE, MUSIC_DI_1);
-//        suble_gpio_rled_blink(1, 100);
         tmp_key_handler(TUYA_BLE_MASTER_OPERATION_OPEN);
     }
     s_key_press_count = 0;
@@ -266,6 +255,8 @@ void master_bonding_slave_handler(uint32_t evt, uint8_t* buf, uint32_t size)
         case TUYA_BLE_MASTER_EVT_SCAN_TIMEOUT: {
             SUBLE_PRINTF("TUYA_BLE_MASTER_EVT_SCAN_TIMEOUT");
             s_master_scan_is_running = false;
+            
+            g_open_fail_count = 0;
         } break;
         
         case TUYA_BLE_MASTER_EVT_CONNECT_TIMEOUT: {
@@ -297,10 +288,14 @@ void master_bonding_slave_handler(uint32_t evt, uint8_t* buf, uint32_t size)
             lock_open_record_report(info->timestamp, s_open_record_info.open_meth, s_open_record_info.hardid, info->slaveid);
             
             suble_gap_disconnect(g_conn_info[1].condix, 0x13);
+            
+            g_open_fail_count = 0;
         } break;
         
         case TUYA_BLE_MASTER_EVT_OPEN_WITH_MASTER_FAILURE: {
             suble_gap_disconnect(g_conn_info[1].condix, 0x13);
+            
+            g_open_fail_count = 0;
         } break;
         
         case TUYA_BLE_MASTER_EVT_DISCONNECT: {
@@ -388,7 +383,10 @@ void suble_gpio_open_with_tmp_pwd(uint8_t hardid, uint16_t slaveid)
     }
 }
 
-
+void set_s_master_scan_is_running(void)
+{
+    s_master_scan_is_running = true;
+}
 
 
 

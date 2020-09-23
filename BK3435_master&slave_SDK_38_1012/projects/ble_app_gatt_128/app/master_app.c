@@ -159,7 +159,7 @@ uint8_t appm_start_connencting(struct gap_bdaddr bdaddr)
             appm_env.con_dev_addr = bdaddr;
             appm_env.con_dev_flag = 1;
 
-            appm_field_save_clean(); //APPM_FIELD_SAVE_CLEAN();
+            APPM_FIELD_CLEAN(); //appm_field_save_clean(); //APPM_FIELD_SAVE_CLEAN();
 
         }
     } else
