@@ -535,6 +535,7 @@ static int gapc_disconnect_ind_handler(ke_msg_id_t const msgid,
                 appm_env.recon_num--;
                 SUBLE_PRINTF("RECONNECTING");
                 set_s_master_scan_is_running();
+                appm_start_connencting(appc_env[idx]->con_dev_addr);
             } else {
                 SUBLE_PRINTF("recon_num %d can't connect peer dev!!!",APPM_RECONNENCT_DEVICE_NUM);
             }

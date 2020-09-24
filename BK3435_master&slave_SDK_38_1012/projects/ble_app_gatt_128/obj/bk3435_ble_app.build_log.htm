@@ -27,6 +27,12 @@ Project File Date:  07/14/2020
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'BK3435_app'
+compiling appm.c...
+compiling appm_task.c...
+linking...
+..\..\sdk\project_files\gatt_link_app.txt(59): warning: L6314W: No section matches pattern *(ke_heap).
+Program Size: Code=99660 RO-data=14440 RW-data=1492 ZI-data=25172  
+Finished: 0 information, 1 warning and 0 error messages.
 After Build - User command #1: fromelf --bin --output .\output\app\bk3435_ble_app.bin .\obj\bk3435_ble_app.axf
 After Build - User command #2: .\output\encrypt_app.bat
 D:\office\workspace\Bk\Tuya_ble_sdk_fitting_project_bk3431q\BK3435_master&slave_SDK_38_1012\projects\ble_app_gatt_128>.\output\BinConvert_3435_OAD  -oad .\output\bim\bk3435_ble_bim.bin  .\output\stack\bk3435_ble_stack.bin  .\output\app\bk3435_ble_app.bin -m 0x1F00 -l 0x1E200 -v 0x1111 -rom_v 0x000C -e 00000000 00000000 00000000 00000000 
@@ -37,17 +43,17 @@ cmd_bin_oad.stack_file_addr=1f00
 boot_bin_len=1cc4
 add stack bin start
         Encrypt Seccessfully!
-        File Size: 0x3dbdc
-oad_stack_app_bin_len=3bb00
-oad_app_bin_len=1dbd0
-65 66 bd 3a 11 11 f4 76 42 42 42 42 ff ff 0c 00 /**< @CREATE_FILE_SUCCESS */
+        File Size: 0x3dbfe
+oad_stack_app_bin_len=3bc00
+oad_app_bin_len=1dcd0
+a5 3c be 35 11 11 34 77 42 42 42 42 ff ff 0c 00 /**< @CREATE_FILE_SUCCESS */
 /**< @Download flash file:.\output\app\bk3435_ble_app_merge_crc.bin
-/**< @OAD file :.\output\app\bk3435_ble_app_stack_oad.bin,CRC = 0x09df122a
-/**< @OAD file :.\output\app\bk3435_ble_app_oad.bin,CRC = 0x3abd6665
+/**< @OAD file :.\output\app\bk3435_ble_app_stack_oad.bin,CRC = 0x05f001bd
+/**< @OAD file :.\output\app\bk3435_ble_app_oad.bin,CRC = 0x35be3ca5
 /**< @author <gang.cheng@bekencorp.com> */
 /**< @version v0.3 */
-".\obj\bk3435_ble_app.axf" - 0 Error(s), 0 Warning(s).
-Build Time Elapsed:  00:00:01
+".\obj\bk3435_ble_app.axf" - 0 Error(s), 1 Warning(s).
+Build Time Elapsed:  00:00:03
 </pre>
 </body>
 </html>

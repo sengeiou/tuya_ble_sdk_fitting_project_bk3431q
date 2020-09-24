@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\obj\bk3435_ble_app.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\obj\bk3435_ble_app.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060750: Last Updated: Wed Sep 23 15:05:36 2020
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060750: Last Updated: Thu Sep 24 18:03:45 2020
 <BR><P>
 <H3>Maximum Stack Usage =       1376 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -692,6 +692,7 @@ Global Symbols
 <LI><a href="#[2c3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;prf_gatt_write
 <LI><a href="#[1b2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;appc_create
 <LI><a href="#[69]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gapm_cmp_evt_handler
+<LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gapc_disconnect_ind_handler
 <LI><a href="#[6b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gapc_connection_req_ind_handler
 </UL>
 
@@ -2633,6 +2634,7 @@ Global Symbols
 </UL>
 <BR>[Called By]<UL><LI><a href="#[311]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;suble_gap_connect
 <LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;appm_scan_adv_con_schedule
+<LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;gapc_disconnect_ind_handler
 </UL>
 
 <P><STRONG><a name="[1ca]"></a>appm_start_scanning</STRONG> (Thumb, 160 bytes, Stack size 24 bytes, master_app.o(i.appm_start_scanning))
@@ -9200,7 +9202,7 @@ Local Symbols
 <P><STRONG><a name="[74]"></a>app_scan_evt_end_handler</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, appm_task.o(i.app_scan_evt_end_handler))
 <BR>[Address Reference Count : 1]<UL><LI> appm_task.o(.constdata)
 </UL>
-<P><STRONG><a name="[76]"></a>appm_con_dev_timerout_handler</STRONG> (Thumb, 52 bytes, Stack size 16 bytes, appm_task.o(i.appm_con_dev_timerout_handler))
+<P><STRONG><a name="[76]"></a>appm_con_dev_timerout_handler</STRONG> (Thumb, 54 bytes, Stack size 16 bytes, appm_task.o(i.appm_con_dev_timerout_handler))
 <BR><BR>[Stack]<UL><LI>Max Depth = 328 + Unknown Stack Size
 <LI>Call Chain = appm_con_dev_timerout_handler &rArr; suble_adv_start &rArr; appm_scan_adv_con_schedule &rArr; appm_start_connencting &rArr; elog_output &rArr;  elog_output (Cycle)
 </UL>
@@ -9255,11 +9257,13 @@ Local Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> appm_task.o(.constdata)
 </UL>
-<P><STRONG><a name="[6c]"></a>gapc_disconnect_ind_handler</STRONG> (Thumb, 212 bytes, Stack size 32 bytes, appm_task.o(i.gapc_disconnect_ind_handler))
+<P><STRONG><a name="[6c]"></a>gapc_disconnect_ind_handler</STRONG> (Thumb, 232 bytes, Stack size 32 bytes, appm_task.o(i.gapc_disconnect_ind_handler))
 <BR><BR>[Stack]<UL><LI>Max Depth = 344 + Unknown Stack Size
 <LI>Call Chain = gapc_disconnect_ind_handler &rArr; suble_adv_start &rArr; appm_scan_adv_con_schedule &rArr; appm_start_connencting &rArr; elog_output &rArr;  elog_output (Cycle)
 </UL>
 <BR>[Calls]<UL><LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;elog_output
+<LI><a href="#[11c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy
+<LI><a href="#[1cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;appm_start_connencting
 <LI><a href="#[235]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;suble_gap_master_disconn_handler
 <LI><a href="#[233]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;suble_gap_disconn_handler
 <LI><a href="#[1c0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;suble_adv_start
