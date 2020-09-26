@@ -627,11 +627,6 @@
               <FilePath>..\..\..\tuya_ble_sdk_demo\src\app\tuya_ble_sdk_demo\tuya_ble_master_port.h</FilePath>
             </File>
             <File>
-              <FileName>tuya_ble_master.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\tuya_ble_sdk_demo\src\app\tuya_ble_sdk_demo\tuya_ble_master.c</FilePath>
-            </File>
-            <File>
               <FileName>tuya_ble_master.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\..\..\tuya_ble_sdk_demo\src\app\tuya_ble_sdk_demo\tuya_ble_master.h</FilePath>
@@ -735,30 +730,11 @@
               <FileName>tuya_ble_sdk_lib_arm9e-s_little_endian.lib</FileName>
               <FileType>4</FileType>
               <FilePath>..\..\..\tuya_ble_sdk_demo\src\tuya_ble_sdk\sdk\lib\tuya_ble_sdk_lib_arm9e-s_little_endian.lib</FilePath>
-              <FileOption>
-                <CommonProperty>
-                  <UseCPPCompiler>2</UseCPPCompiler>
-                  <RVCTCodeConst>0</RVCTCodeConst>
-                  <RVCTZI>0</RVCTZI>
-                  <RVCTOtherData>0</RVCTOtherData>
-                  <ModuleSelection>0</ModuleSelection>
-                  <IncludeInBuild>0</IncludeInBuild>
-                  <AlwaysBuild>2</AlwaysBuild>
-                  <GenerateAssemblyFile>2</GenerateAssemblyFile>
-                  <AssembleAssemblyFile>2</AssembleAssemblyFile>
-                  <PublicsOnly>2</PublicsOnly>
-                  <StopOnExitCode>11</StopOnExitCode>
-                  <CustomArgument></CustomArgument>
-                  <IncludeLibraryModules></IncludeLibraryModules>
-                  <ComprImg>1</ComprImg>
-                </CommonProperty>
-                <FileArmAds/>
-              </FileOption>
             </File>
             <File>
-              <FileName>tuya_ble_secure.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\tuya_ble_sdk_demo\src\tuya_ble_sdk\sdk\lib\src\tuya_ble_secure.c</FilePath>
+              <FileName>tuya_ble_master.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\..\..\tuya_ble_sdk_demo\src\app\tuya_ble_sdk_demo\tuya_ble_master.lib</FilePath>
             </File>
           </Files>
         </Group>
